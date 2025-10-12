@@ -1,0 +1,96 @@
+# =============================
+# Customer Revenue Uplift Simulator Configuration
+# =============================
+
+[project]
+name = "customer-revenue-uplift"
+version = "1.0.0"
+description = "ML system for telecommunications marketing campaign optimization"
+author = "Damelia"
+year = 2025
+license = "MIT"
+
+[data]
+# Dataset file paths
+customer_profile_path = "dataset/customer_profile.csv"
+usage_metrics_path = "dataset/usage_metrics.csv"
+campaign_history_path = "dataset/campaign_history.csv"
+network_kpi_path = "dataset/network_kpi.csv"
+complaints_path = "dataset/complaints.csv"
+
+[modeling]
+# Data processing
+random_state = 42
+test_size = 0.2
+cv_folds = 5
+
+# Feature engineering  
+time_windows = [7, 30]
+outlier_threshold = 3.0
+
+# =============================
+# Customer Revenue Uplift Simulator Configuration
+# =============================
+
+[project]
+name = "customer-revenue-uplift"
+version = "1.0.0"
+description = "ML system for telecommunications marketing campaign optimization"
+author = "Damelia"
+year = 2025
+license = "MIT"
+
+[data]
+# Dataset file paths
+customer_profile_path = "dataset/customer_profile.csv"
+usage_metrics_path = "dataset/usage_metrics.csv"
+campaign_history_path = "dataset/campaign_history.csv"
+network_kpi_path = "dataset/network_kpi.csv"
+complaints_path = "dataset/complaints.csv"
+
+[modeling]
+# Data processing
+random_state = 42
+test_size = 0.2
+cv_folds = 5
+
+# Feature engineering  
+time_windows = [7, 30]
+outlier_threshold = 3.0
+
+# Model training
+rf_n_estimators = 100
+rf_max_depth = 10
+rf_min_samples_split = 20
+rf_min_samples_leaf = 5
+
+# Network quality thresholds
+[network_thresholds]
+availability = 98
+trans_packet_loss = 0.2
+trans_tnl = 500
+ul_interference = -100
+vswr = 140
+rsrp = -105
+rsrq = -15
+prb_usage = 90
+max_user = 150
+active_user_max = 30
+cssr = 98
+
+[business]
+# Campaign economics (in IDR)
+campaign_cost_per_customer = 5000.0
+revenue_multiplier = 1.2
+high_value_threshold = 100000
+
+# Options
+use_synthetic_data = false
+
+[visualization]
+figure_size = [8, 5]
+dpi = 300
+color_palette = "viridis"
+
+# Protected columns for outlier handling
+protected_column_patterns = ["revenue", "arpu", "uplift", "spend", "amount", "billing"]
