@@ -82,8 +82,8 @@ def main():
 
     # --- Section 1: Ranking & Targeting ---
     st.markdown("---")
-    st.header("Ranking & Targeting")
-    st.markdown("### 🏆 Top 10 Customers for Next Campaign Targeting by Uplift Score & ARPU")
+    st.header("✅ Ranking & Targeting")
+    st.markdown("#### 🏆 Top 10 Customers for Next Campaign Targeting by Uplift Score & ARPU")
     cols = [
         'customer_id', 'age', 'gender', 'city', 'plan_type', 'uplift_score', 'ARPU',
         'data_user_type', 'social_user_type', 'gaming_user_type', 'network_quality_score',
@@ -114,8 +114,8 @@ def main():
 
     # --- Section 2: Campaign Simulation & What-If ---
     st.markdown("---")
-    st.header("Campaign Simulation & What-If Analysis")
-    st.markdown("### 📊 Campaign Simulation Scenarios & Optimal Strategy Insight")
+    st.header("✅ Campaign Simulation & What-If Analysis")
+    st.markdown("#### 📊 Campaign Simulation Scenarios & Optimal Strategy Insight")
     # Format simulation results for display
     df = pd.DataFrame(simulation_results) if not isinstance(simulation_results, pd.DataFrame) else simulation_results.copy()
     # Add formatted columns
@@ -234,7 +234,7 @@ def main():
         fig3.tight_layout()
         st.pyplot(fig3)
 
-    st.markdown("### 📊 What-If Analysis")
+    st.markdown("#### 📊 What-If Analysis")
     col1, col2 = st.columns(2)
     with col1:
         target_pct = st.slider("Target % Customer", 1, 100, value=5)
@@ -256,12 +256,12 @@ def main():
                 f"🚀 Avg uplift per customer: {result['avg_uplift']*100:.1f}%\n"
                 f"📱 Avg ARPU: Rp {result['avg_arpu']:,.0f}"
             )
-        st.text_area("Hasil Analisis", st.session_state['whatif_result'], height=180)
+        st.text_area("Hasil Analisis", st.session_state['whatif_result'], height=210)
     
     # --- Section 3: Network Influence Analysis ---
     st.markdown("---")
-    st.header("Network Influence Analysis")
-    st.markdown("### 🌐 Network & Influence Insights")
+    st.header("✅ Network Influence Analysis")
+    st.markdown("#### 🌐 Network & Influence Insights")
     num_nodes = G.number_of_nodes()
     num_edges = G.number_of_edges()
     density = nx.density(G)
@@ -274,7 +274,7 @@ def main():
     with col3:
         st.metric("Network Density", f"{density:.4f}")
             
-    st.markdown("### 🏆 Top 10 Influential Customers")
+    st.markdown("#### 🏆 Top 10 Influential Customers")
     top_influencers = df_influence.sort_values('influence_score', ascending=False).head(10).copy()
     cols = [
         'customer_id', 'influence_score', 'network_influence', 'degree_centrality', 'betweenness_centrality',
@@ -300,8 +300,8 @@ def main():
 
     # --- Section 4: Customer Segmentation ---
     st.markdown("---")
-    st.header("Customer Segmentation Performance")
-    st.markdown("### 📱 Plan Type Performance")
+    st.header("✅ Customer Segmentation Performance")
+    st.markdown("#### 📱 Plan Type Performance")
     plan_perf_fmt = plan_perf.copy()
     plan_perf_fmt['Avg Uplift'] = plan_perf_fmt['Avg Uplift'].astype(float)
     plan_perf_fmt['Avg ARPU'] = plan_perf_fmt['Avg ARPU'].astype(float)
@@ -323,7 +323,7 @@ def main():
     st.markdown(insight_plan)
 
     # --- Section 4: Geographic Segmentation ---
-    st.markdown("### 🗺️ Geographic Performance")
+    st.markdown("#### 🗺️ Geographic Performance")
     geo_perf_fmt = geo_perf.copy()
     geo_perf_fmt['Avg Uplift'] = geo_perf_fmt['Avg Uplift'].astype(float)
     geo_perf_fmt['Avg ARPU'] = geo_perf_fmt['Avg ARPU'].astype(float)
@@ -346,8 +346,8 @@ def main():
 
     # --- Section 4: Model Explainability ---
     st.markdown("---")
-    st.header("Model Explainability")
-    st.markdown("### 🏆 Top 10 Features By SHAP Importance")
+    st.header("✅ Model Explainability")
+    st.markdown("#### 🏆 Top 10 Features By SHAP Importance")
     top10 = feature_importance_shap.head(10).copy()
     top10['SHAP Importance'] = top10['shap_importance'].apply(lambda x: f"{x*100:.2f}%")
     top10_table = top10[['fitur', 'SHAP Importance']]
