@@ -78,11 +78,12 @@ def run_what_if(target_pct, cost_per_customer, revenue_multiplier):
 
 # Main Dashboard
 def main():
-    st.title("Customer Revenue Uplift Dashboard")
+    st.title("🚀 Customer Revenue Uplift Dashboard")
 
     # --- Section 1: Ranking & Targeting ---
     st.markdown("---")
-    st.header("🏆 Top 10 Customers for Next Campaign Targeting by Uplift Score & ARPU")
+    st.header("Ranking & Targeting")
+    st.markdown("### 🏆 Top 10 Customers for Next Campaign Targeting by Uplift Score & ARPU")
     cols = [
         'customer_id', 'age', 'gender', 'city', 'plan_type', 'uplift_score', 'ARPU',
         'data_user_type', 'social_user_type', 'gaming_user_type', 'network_quality_score',
@@ -113,7 +114,8 @@ def main():
 
     # --- Section 2: Campaign Simulation & What-If ---
     st.markdown("---")
-    st.header("📊 Campaign Simulation Scenarios & Optimal Strategy Insight")
+    st.header("Campaign Simulation & What-If Analysis")
+    st.markdown("### 📊 Campaign Simulation Scenarios & Optimal Strategy Insight")
     # Format simulation results for display
     df = pd.DataFrame(simulation_results) if not isinstance(simulation_results, pd.DataFrame) else simulation_results.copy()
     # Add formatted columns
@@ -150,84 +152,89 @@ def main():
 
     st.markdown(f"**💡 Insight:**\n\n{insight}")
 
-    # Graph 1: Net Revenue & ROI vs Target % (matplotlib)
-    fig1, ax1 = plt.subplots(figsize=(9, 6))
-    color = 'tab:blue'
-    ax1.set_xlabel('Target')
-    ax1.set_ylabel('Net Revenue (Rp)', color=color)
-    ax1.set_title("Net Revenue & ROI vs Target %")
-    line1 = ax1.plot(df['Target %'], df['net_revenue'], color=color, marker='o', label='Net Revenue')
-    ax1.tick_params(axis='y', labelcolor=color)
-    ax1.yaxis.set_major_formatter(mtick.StrMethodFormatter('{x:,.0f}'))
-    for i, v in enumerate(df['net_revenue']):
-        ax1.annotate(f"Rp {int(v):,}", (i, v), textcoords="offset points", xytext=(0,5), ha='center', fontsize=8, color=color)
-    ax2 = ax1.twinx()
-    color = 'tab:green'
-    ax2.set_ylabel('ROI (%)', color=color)
-    line2 = ax2.plot(df['Target %'], df['roi'], color=color, marker='x', label='ROI')
-    ax2.tick_params(axis='y', labelcolor=color)
-    for i, v in enumerate(df['roi']):
-        ax2.annotate(f"{int(round(v))}%", (i, v), textcoords="offset points", xytext=(0,5), ha='center', fontsize=8, color=color)
-    max_net_idx = df['net_revenue'].idxmax()
-    ax1.plot(max_net_idx, df['net_revenue'][max_net_idx], marker='o', color='red', markersize=10, label='Max Net Revenue')
-    ax1.annotate('Max Net Revenue', (max_net_idx, df['net_revenue'][max_net_idx]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='red')
-    max_idx = df['roi'].idxmax()
-    ax2.plot(max_idx, df['roi'][max_idx], marker='o', color='red', markersize=10, label='Max ROI')
-    ax2.annotate('Max ROI', (max_idx, df['roi'][max_idx]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='red')
-    fig1.tight_layout()
-    st.pyplot(fig1)
+    # Create graphs
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        # Graph 1: Net Revenue & ROI vs Target % (matplotlib)
+        fig1, ax1 = plt.subplots(figsize=(9, 6))
+        color = 'tab:blue'
+        ax1.set_xlabel('Target')
+        ax1.set_ylabel('Net Revenue (Rp)', color=color)
+        ax1.set_title("Net Revenue & ROI vs Target %")
+        line1 = ax1.plot(df['Target %'], df['net_revenue'], color=color, marker='o', label='Net Revenue')
+        ax1.tick_params(axis='y', labelcolor=color)
+        ax1.yaxis.set_major_formatter(mtick.StrMethodFormatter('{x:,.0f}'))
+        for i, v in enumerate(df['net_revenue']):
+            ax1.annotate(f"Rp {int(v):,}", (i, v), textcoords="offset points", xytext=(0,5), ha='center', fontsize=8, color=color)
+        ax2 = ax1.twinx()
+        color = 'tab:green'
+        ax2.set_ylabel('ROI (%)', color=color)
+        line2 = ax2.plot(df['Target %'], df['roi'], color=color, marker='x', label='ROI')
+        ax2.tick_params(axis='y', labelcolor=color)
+        for i, v in enumerate(df['roi']):
+            ax2.annotate(f"{int(round(v))}%", (i, v), textcoords="offset points", xytext=(0,5), ha='center', fontsize=8, color=color)
+        max_net_idx = df['net_revenue'].idxmax()
+        ax1.plot(max_net_idx, df['net_revenue'][max_net_idx], marker='o', color='red', markersize=10, label='Max Net Revenue')
+        ax1.annotate('Max Net Revenue', (max_net_idx, df['net_revenue'][max_net_idx]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='red')
+        max_idx = df['roi'].idxmax()
+        ax2.plot(max_idx, df['roi'][max_idx], marker='o', color='red', markersize=10, label='Max ROI')
+        ax2.annotate('Max ROI', (max_idx, df['roi'][max_idx]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='red')
+        fig1.tight_layout()
+        st.pyplot(fig1)
 
-    # Graph 2: Bar Chart - Expected Revenue, Cost, Net Revenue per Target % + ROI Line + Data Labels + Highlight
-    fig2, ax = plt.subplots(figsize=(9, 6))
-    ax.set_title("Expected Revenue, Cost, Net Revenue per Target %")
-    x = np.arange(len(df['Target %']))
-    width = 0.25
-    bars1 = ax.bar(x - width, df['expected_revenue'], width, label='Expected Revenue', color='#4e79a7')
-    bars2 = ax.bar(x, df['campaign_cost'], width, label='Cost', color='#f28e2b')
-    bars3 = ax.bar(x + width, df['net_revenue'], width, label='Net Revenue', color='#59a14f')
-    for bar in bars1: ax.annotate(f"{int(bar.get_height()):,}", (bar.get_x() + bar.get_width()/2, bar.get_height()), ha='center', va='bottom', fontsize=8)
-    for bar in bars2: ax.annotate(f"{int(bar.get_height()):,}", (bar.get_x() + bar.get_width()/2, bar.get_height()), ha='center', va='bottom', fontsize=8)
-    for bar in bars3: ax.annotate(f"{int(bar.get_height()):,}", (bar.get_x() + bar.get_width()/2, bar.get_height()), ha='center', va='bottom', fontsize=8)
-    ax2b = ax.twinx()
-    ax2b.plot(x, df['roi'], color='tab:red', marker='o', label='ROI (%)')
-    for i, v in enumerate(df['roi']):
-        ax2b.annotate(f"{int(round(v))}%", (x[i], v), textcoords="offset points", xytext=(0,5), ha='center', fontsize=8, color='tab:red')
-    max_net_idx = df['net_revenue'].idxmax()
-    ax.annotate('Max Net Revenue', (x[max_net_idx] + width, df['net_revenue'][max_net_idx]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='green')
-    max_roi_idx = df['roi'].idxmax()
-    ax2b.annotate('Max ROI', (x[max_roi_idx], df['roi'][max_roi_idx]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='red')
-    ax.set_xticks(x)
-    ax.set_xticklabels(df['Target %'])
-    ax.set_xlabel('Target')
-    ax.legend(loc='upper left')
-    ax2b.legend(loc='upper right')
-    ax.set_ylabel('Amount (Rp)')
-    ax.yaxis.set_major_formatter(mtick.StrMethodFormatter('{x:,.0f}'))
-    ax2b.set_ylabel('ROI (%)')
-    fig2.tight_layout()
-    st.pyplot(fig2)
+    with col2:
+        # Graph 2: Bar Chart - Expected Revenue, Cost, Net Revenue per Target % + ROI Line + Data Labels + Highlight
+        fig2, ax = plt.subplots(figsize=(9, 6))
+        ax.set_title("Expected Revenue, Cost, Net Revenue per Target %")
+        x = np.arange(len(df['Target %']))
+        width = 0.25
+        bars1 = ax.bar(x - width, df['expected_revenue'], width, label='Expected Revenue', color='#4e79a7')
+        bars2 = ax.bar(x, df['campaign_cost'], width, label='Cost', color='#f28e2b')
+        bars3 = ax.bar(x + width, df['net_revenue'], width, label='Net Revenue', color='#59a14f')
+        for bar in bars1: ax.annotate(f"{int(bar.get_height()):,}", (bar.get_x() + bar.get_width()/2, bar.get_height()), ha='center', va='bottom', fontsize=8)
+        for bar in bars2: ax.annotate(f"{int(bar.get_height()):,}", (bar.get_x() + bar.get_width()/2, bar.get_height()), ha='center', va='bottom', fontsize=8)
+        for bar in bars3: ax.annotate(f"{int(bar.get_height()):,}", (bar.get_x() + bar.get_width()/2, bar.get_height()), ha='center', va='bottom', fontsize=8)
+        ax2b = ax.twinx()
+        ax2b.plot(x, df['roi'], color='tab:red', marker='o', label='ROI (%)')
+        for i, v in enumerate(df['roi']):
+            ax2b.annotate(f"{int(round(v))}%", (x[i], v), textcoords="offset points", xytext=(0,5), ha='center', fontsize=8, color='tab:red')
+        max_net_idx = df['net_revenue'].idxmax()
+        ax.annotate('Max Net Revenue', (x[max_net_idx] + width, df['net_revenue'][max_net_idx]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='green')
+        max_roi_idx = df['roi'].idxmax()
+        ax2b.annotate('Max ROI', (x[max_roi_idx], df['roi'][max_roi_idx]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='red')
+        ax.set_xticks(x)
+        ax.set_xticklabels(df['Target %'])
+        ax.set_xlabel('Target')
+        ax.legend(loc='upper left')
+        ax2b.legend(loc='upper right')
+        ax.set_ylabel('Amount (Rp)')
+        ax.yaxis.set_major_formatter(mtick.StrMethodFormatter('{x:,.0f}'))
+        ax2b.set_ylabel('ROI (%)')
+        fig2.tight_layout()
+        st.pyplot(fig2)
 
-    # Graph 3: Line Chart - Average Uplift vs Target % + Data Labels + Mean Line + Highlight Drop
-    fig3, ax = plt.subplots(figsize=(9, 6))
-    ax.set_title("Average Uplift vs Target %")
-    ax.plot(df['Target %'], df['avg_uplift']*100, marker='o', color='#1f77b4', label='Avg Uplift')
-    for i, v in enumerate(df['avg_uplift']*100):
-        ax.annotate(f"{v:.1f}%", (i, v), textcoords="offset points", xytext=(0,5), ha='center', fontsize=8, color='#1f77b4')
-    mean_uplift = (df['avg_uplift']*100).mean()
-    ax.axhline(mean_uplift, color='gray', linestyle='--', label=f'Mean: {mean_uplift:.1f}%')
-    uplift_vals = df['avg_uplift']*100
-    diffs = np.diff(uplift_vals)
-    if len(diffs) > 0:
-        drop_idx = np.argmin(diffs)
-        ax.plot(drop_idx+1, uplift_vals.iloc[drop_idx+1], marker='o', color='red', markersize=10)
-        ax.annotate('Significant Drop', (drop_idx+1, uplift_vals.iloc[drop_idx+1]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='red')
-    ax.set_xlabel('Target %')
-    ax.set_ylabel('Average Uplift (%)')
-    ax.legend()
-    fig3.tight_layout()
-    st.pyplot(fig3)
+    with col3:
+        # Graph 3: Line Chart - Average Uplift vs Target % + Data Labels + Mean Line + Highlight Drop
+        fig3, ax = plt.subplots(figsize=(9, 6))
+        ax.set_title("Average Uplift vs Target %")
+        ax.plot(df['Target %'], df['avg_uplift']*100, marker='o', color='#1f77b4', label='Avg Uplift')
+        for i, v in enumerate(df['avg_uplift']*100):
+            ax.annotate(f"{v:.1f}%", (i, v), textcoords="offset points", xytext=(0,5), ha='center', fontsize=8, color='#1f77b4')
+        mean_uplift = (df['avg_uplift']*100).mean()
+        ax.axhline(mean_uplift, color='gray', linestyle='--', label=f'Mean: {mean_uplift:.1f}%')
+        uplift_vals = df['avg_uplift']*100
+        diffs = np.diff(uplift_vals)
+        if len(diffs) > 0:
+            drop_idx = np.argmin(diffs)
+            ax.plot(drop_idx+1, uplift_vals.iloc[drop_idx+1], marker='o', color='red', markersize=10)
+            ax.annotate('Significant Drop', (drop_idx+1, uplift_vals.iloc[drop_idx+1]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='red')
+        ax.set_xlabel('Target %')
+        ax.set_ylabel('Average Uplift (%)')
+        ax.legend()
+        fig3.tight_layout()
+        st.pyplot(fig3)
 
-    st.markdown("## 📊 What-If Analysis")
+    st.markdown("### 📊 What-If Analysis")
     col1, col2 = st.columns(2)
     with col1:
         target_pct = st.slider("Target % Customer", 1, 100, value=5)
@@ -253,7 +260,8 @@ def main():
     
     # --- Section 3: Network Influence Analysis ---
     st.markdown("---")
-    st.header("🌐 Network & Influence Insights")
+    st.header("Network Influence Analysis")
+    st.markdown("### 🌐 Network & Influence Insights")
     num_nodes = G.number_of_nodes()
     num_edges = G.number_of_edges()
     density = nx.density(G)
@@ -266,7 +274,7 @@ def main():
     with col3:
         st.metric("Network Density", f"{density:.4f}")
             
-    st.header("🏆 Top 10 Influential Customers")
+    st.markdown("### 🏆 Top 10 Influential Customers")
     top_influencers = df_influence.sort_values('influence_score', ascending=False).head(10).copy()
     cols = [
         'customer_id', 'influence_score', 'network_influence', 'degree_centrality', 'betweenness_centrality',
@@ -281,7 +289,6 @@ def main():
     top_influencers['pagerank'] = top_influencers['pagerank'].apply(lambda x: f"{x:.4f}")
     top_influencers['uplift_score'] = top_influencers['uplift_score'].apply(lambda x: f"{x*100:.2f}%")
     top_influencers['ARPU'] = top_influencers['ARPU'].apply(lambda x: f"Rp {x:,.0f}")
-    top_influencers.insert(0, 'No', range(1, len(top_influencers) + 1))
     st.dataframe(top_influencers, use_container_width=True)
     top_row = top_influencers.iloc[0]
     insight_influencer = (
@@ -293,7 +300,8 @@ def main():
 
     # --- Section 4: Customer Segmentation ---
     st.markdown("---")
-    st.header("📱 Plan Type Performance")
+    st.header("Customer Segmentation Performance")
+    st.markdown("### 📱 Plan Type Performance")
     plan_perf_fmt = plan_perf.copy()
     plan_perf_fmt['Avg Uplift'] = plan_perf_fmt['Avg Uplift'].astype(float)
     plan_perf_fmt['Avg ARPU'] = plan_perf_fmt['Avg ARPU'].astype(float)
@@ -315,7 +323,7 @@ def main():
     st.markdown(insight_plan)
 
     # --- Section 4: Geographic Segmentation ---
-    st.header("🗺️ Geographic Performance")
+    st.markdown("### 🗺️ Geographic Performance")
     geo_perf_fmt = geo_perf.copy()
     geo_perf_fmt['Avg Uplift'] = geo_perf_fmt['Avg Uplift'].astype(float)
     geo_perf_fmt['Avg ARPU'] = geo_perf_fmt['Avg ARPU'].astype(float)
@@ -338,7 +346,8 @@ def main():
 
     # --- Section 4: Model Explainability ---
     st.markdown("---")
-    st.header("🏆 Top 10 Features By SHAP Importance")
+    st.header("Model Explainability")
+    st.markdown("### 🏆 Top 10 Features By SHAP Importance")
     top10 = feature_importance_shap.head(10).copy()
     top10['SHAP Importance'] = top10['shap_importance'].apply(lambda x: f"{x*100:.2f}%")
     top10_table = top10[['fitur', 'SHAP Importance']]
