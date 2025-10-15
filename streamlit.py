@@ -115,7 +115,7 @@ def main():
     # --- Section 2: Campaign Simulation & What-If ---
     st.markdown("---")
     st.header("• Campaign Simulation & What-If Analysis")
-    st.markdown("#### 📊 Campaign Simulation Scenarios & Optimal Strategy Insight")
+    st.markdown("#### 📊 Simulation Scenarios")
     # Format simulation results for display
     df = pd.DataFrame(simulation_results) if not isinstance(simulation_results, pd.DataFrame) else simulation_results.copy()
     # Add formatted columns
@@ -237,31 +237,27 @@ def main():
     st.markdown("#### 📊 What-If Analysis")
     col1, col2 = st.columns(2)
     with col1:
-        target_pct = st.slider("Target % Customer", 1, 100, value=5)
+        target_pct = st.slider("Target % Customer", 1, 100, value=10)
         cost_per_customer = st.number_input("Biaya per Customer", value=5000)
         revenue_multiplier = st.number_input("Revenue Multiplier", value=1.2)
-        run = st.button("Run Prediction")
     with col2:
-        if 'whatif_result' not in st.session_state:
-            st.session_state['whatif_result'] = ""
-        if run:
-            result = run_what_if(target_pct, cost_per_customer, revenue_multiplier)
-            st.session_state['whatif_result'] = (
-                f"👥 Targeted customers: {result['targeted_customers']:,}\n"
-                f"🤝 Expected conversions: {result['expected_conversions']:.0f}\n"
-                f"📈 Expected revenue: Rp {result['expected_revenue']:,.0f}\n"
-                f"💸 Campaign cost: Rp {result['campaign_cost']:,.0f}\n"
-                f"📊 Net profit: Rp {result['net_revenue']:,.0f}\n"
-                f"💰 ROI: {result['roi']:.1f}%\n"
-                f"🚀 Avg uplift per customer: {result['avg_uplift']*100:.1f}%\n"
-                f"📱 Avg ARPU: Rp {result['avg_arpu']:,.0f}"
-            )
-        st.text_area("Hasil Analisis", st.session_state['whatif_result'], height=250)
+        result = run_what_if(target_pct, cost_per_customer, revenue_multiplier)
+        whatif_result = (
+            f"👥 Targeted customers: {result['targeted_customers']:,}\n"
+            f"🤝 Expected conversions: {result['expected_conversions']:.0f}\n"
+            f"📈 Expected revenue: Rp {result['expected_revenue']:,.0f}\n"
+            f"💸 Campaign cost: Rp {result['campaign_cost']:,.0f}\n"
+            f"📊 Net profit: Rp {result['net_revenue']:,.0f}\n"
+            f"💰 ROI: {result['roi']:.1f}%\n"
+            f"🚀 Avg uplift per customer: {result['avg_uplift']*100:.1f}%\n"
+            f"📱 Avg ARPU: Rp {result['avg_arpu']:,.0f}"
+        )
+        st.text_area("Hasil Analisis", whatif_result, height=240)
     
     # --- Section 3: Network Influence Analysis ---
     st.markdown("---")
     st.header("• Network Influence Analysis")
-    st.markdown("#### 🌐 Network & Influence Insights")
+    st.markdown("#### 🌐 Summary")
     num_nodes = G.number_of_nodes()
     num_edges = G.number_of_edges()
     density = nx.density(G)
