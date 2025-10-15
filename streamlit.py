@@ -252,7 +252,7 @@ def main():
             f"🚀 Avg uplift per customer: {result['avg_uplift']*100:.1f}%\n"
             f"📱 Avg ARPU: Rp {result['avg_arpu']:,.0f}"
         )
-        st.text_area("Hasil Analisis", whatif_result, height=240)
+    st.text_area("Analysis Result", whatif_result, height=240)
     
     # --- Section 3: Network Influence Analysis ---
     st.markdown("---")
