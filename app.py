@@ -42,9 +42,9 @@ le_dict = joblib.load('model/label_encoders.pkl')
 # Tab 1: Ranking & Targeting
 def tab1() -> gr.Blocks:
     cols = [
-        'customer_id', 'age', 'gender', 'city', 'plan_type', 'ARPU',
+        'customer_id', 'age', 'gender', 'city', 'plan_type', 'uplift_score', 'ARPU',
         'data_user_type', 'social_user_type', 'gaming_user_type', 'network_quality_score',
-        'campaign_count', 'campaign_converted', 'campaign_uplift_mean', 'uplift_score',
+        'campaign_count', 'campaign_converted', 'campaign_uplift_mean',
         'treatment_prob', 'control_prob', 'campaign_network_interaction', 'campaign_data_interaction',
         'data_usage_gb_rolling7', 'data_arpu_interaction', 'data_usage_gb_sum', 'data_usage_gb_mean',
         'days_since_last_campaign', 'complaints_count'
@@ -255,8 +255,59 @@ def tab2() -> gr.Blocks:
 
 
 # -----------------------------------------------------------------------------------#
-# Tab 3: Customer Segmentation with Actionable Insights
+# Tab 3: Network Influence Analysis
 def tab3() -> None:
+    # Network & Influence Insights
+    num_nodes = G.number_of_nodes()
+    num_edges = G.number_of_edges()
+    density = nx.density(G)
+    network_insight = (
+        f"- Total number of nodes in the network: **{num_nodes:,}**\n"
+        f"- Total number of connections (edges) between nodes: **{num_edges:,}**\n"
+        f"- Network density (proportion of actual to possible connections): **{density:.4f}**\n"
+    )
+
+    # Top 10 Influential Customers Table
+    top_influencers = df_influence.sort_values('influence_score', ascending=False).head(10).copy()
+    cols = [
+        'customer_id', 'influence_score', 'network_influence', 'degree_centrality', 'betweenness_centrality',
+        'eigenvector_centrality', 'pagerank', 'uplift_score', 'ARPU', 'connections', 'city', 'plan_type', 'age'
+    ]
+    top_influencers = top_influencers[cols]
+    top_influencers.insert(0, 'No', range(1, len(top_influencers) + 1))
+
+    # Format numeric columns for display
+    top_influencers['influence_score'] = top_influencers['influence_score'].apply(lambda x: f"{x:.4f}")
+    top_influencers['network_influence'] = top_influencers['network_influence'].apply(lambda x: f"{x:.4f}")
+    top_influencers['degree_centrality'] = top_influencers['degree_centrality'].apply(lambda x: f"{x:.4f}")
+    top_influencers['betweenness_centrality'] = top_influencers['betweenness_centrality'].apply(lambda x: f"{x:.4f}")
+    top_influencers['eigenvector_centrality'] = top_influencers['eigenvector_centrality'].apply(lambda x: f"{x:.4f}")
+    top_influencers['pagerank'] = top_influencers['pagerank'].apply(lambda x: f"{x:.4f}")
+    top_influencers['uplift_score'] = top_influencers['uplift_score'].apply(lambda x: f"{x*100:.2f}%")
+    top_influencers['ARPU'] = top_influencers['ARPU'].apply(lambda x: f"Rp {x:,.0f}")
+
+    # Get top influencer details for potential further insights
+    top_row = top_influencers.iloc[0]
+    insight_influencer = (
+        f"💡 **Insight**: The most influential customers, such as customer ID **{top_row['customer_id']}** "
+        f"(influence score: **{top_row['influence_score']}**), have a strong potential to **spread influence** across the network. "
+        f"Prioritizing campaigns to these top influencers can accelerate message reach and **boost revenue**."
+    )
+
+    with gr.Blocks(title="Network Influence Analysis") as demo:
+        gr.Markdown("## 🌐 Network & Influence Insights")
+        gr.Markdown(network_insight)
+
+        gr.Markdown("---")
+        gr.Markdown("## 🏆 Top 10 Influential Customers")
+        gr.Dataframe(top_influencers, interactive=False)
+        gr.Markdown(insight_influencer)
+    return demo
+
+
+# -----------------------------------------------------------------------------------#
+# Tab 4: Customer Segmentation with Actionable Insights
+def tab4() -> None:
     # Format plan_perf and geo_perf for display (do not overwrite original)
     plan_perf_fmt = plan_perf.copy()
     geo_perf_fmt = geo_perf.copy()
@@ -310,57 +361,6 @@ def tab3() -> None:
 
 
 # -----------------------------------------------------------------------------------#
-# Tab 4: Network Influence Analysis
-def tab4() -> None:
-    # Network & Influence Insights
-    num_nodes = G.number_of_nodes()
-    num_edges = G.number_of_edges()
-    density = nx.density(G)
-    network_insight = (
-        f"- Total number of nodes in the network: **{num_nodes:,}**\n"
-        f"- Total number of connections (edges) between nodes: **{num_edges:,}**\n"
-        f"- Network density (proportion of actual to possible connections): **{density:.4f}**\n"
-    )
-
-    # Top 10 Influential Customers Table
-    top_influencers = df_influence.sort_values('influence_score', ascending=False).head(10).copy()
-    cols = [
-        'customer_id', 'influence_score', 'network_influence', 'degree_centrality', 'betweenness_centrality',
-        'eigenvector_centrality', 'pagerank', 'uplift_score', 'ARPU', 'connections', 'city', 'plan_type', 'age'
-    ]
-    top_influencers = top_influencers[cols]
-    top_influencers.insert(0, 'No', range(1, len(top_influencers) + 1))
-
-    # Format numeric columns for display
-    top_influencers['influence_score'] = top_influencers['influence_score'].apply(lambda x: f"{x:.4f}")
-    top_influencers['network_influence'] = top_influencers['network_influence'].apply(lambda x: f"{x:.4f}")
-    top_influencers['degree_centrality'] = top_influencers['degree_centrality'].apply(lambda x: f"{x:.4f}")
-    top_influencers['betweenness_centrality'] = top_influencers['betweenness_centrality'].apply(lambda x: f"{x:.4f}")
-    top_influencers['eigenvector_centrality'] = top_influencers['eigenvector_centrality'].apply(lambda x: f"{x:.4f}")
-    top_influencers['pagerank'] = top_influencers['pagerank'].apply(lambda x: f"{x:.4f}")
-    top_influencers['uplift_score'] = top_influencers['uplift_score'].apply(lambda x: f"{x*100:.2f}%")
-    top_influencers['ARPU'] = top_influencers['ARPU'].apply(lambda x: f"Rp {x:,.0f}")
-
-    # Get top influencer details for potential further insights
-    top_row = top_influencers.iloc[0]
-    insight_influencer = (
-        f"💡 **Insight**: The most influential customers, such as customer ID **{top_row['customer_id']}** "
-        f"(influence score: **{top_row['influence_score']}**), have a strong potential to **spread influence** across the network. "
-        f"Prioritizing campaigns to these top influencers can accelerate message reach and **boost revenue**."
-    )
-
-    with gr.Blocks(title="Network Influence Analysis") as demo:
-        gr.Markdown("## 🌐 Network & Influence Insights")
-        gr.Markdown(network_insight)
-
-        gr.Markdown("---")
-        gr.Markdown("## 🏆 Top 10 Influential Customers")
-        gr.Dataframe(top_influencers, interactive=False)
-        gr.Markdown(insight_influencer)
-    return demo
-
-
-# -----------------------------------------------------------------------------------#
 # Tab 5: Model Explainability
 def tab5():
     # Top 10 Feature Importance Table by SHAP
@@ -388,9 +388,9 @@ def customer_revenue_uplift_dashboard():
                 tab1()
             with gr.TabItem("Campaign Simulation & What-If"):
                 tab2()
-            with gr.TabItem("Customer Segmentation"):
-                tab3()
             with gr.TabItem("Network Influence Analysis"):
+                tab3()
+            with gr.TabItem("Customer Segmentation"):
                 tab4()
             with gr.TabItem("Model Explainability"):
                 tab5()
