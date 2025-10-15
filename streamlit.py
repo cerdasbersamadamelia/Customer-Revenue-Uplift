@@ -172,107 +172,132 @@ def main():
         st.plotly_chart(fig1, use_container_width=True)
 
     with col2:
-        # Graph 2: Average Uplift vs Target %
-        fig3 = go.Figure()
-        fig3.add_trace(go.Scatter(
-            x=df['Target %'], 
-            y=df['avg_uplift']*100, 
-            mode='lines+markers+text',
-            name='Avg Uplift',
-            text=[f"{v:.1f}%" for v in df['avg_uplift']*100],
-            textposition="top center"
-        ))
+        # --- Section 2: Campaign Simulation & What-If ---
+        st.header("📊 Campaign Simulation Scenarios & Optimal Strategy Insight")
+        df = pd.DataFrame(simulation_results) if not isinstance(simulation_results, pd.DataFrame) else simulation_results.copy()
+        df["Target %"] = df["target_percentage"].apply(lambda x: f"{int(x)}%")
+        cols = ["Target %"] + [col for col in df.columns if col not in ["Target %", "target_percentage"]]
+        df_display = df[cols].copy()
+        df_display["targeted_customers"] = df_display["targeted_customers"].apply(lambda x: f"{int(x):,}")
+        df_display["expected_conversions"] = df_display["expected_conversions"].apply(lambda x: f"{int(round(x)):,}")
+        df_display["expected_revenue"] = df_display["expected_revenue"].apply(lambda x: f"Rp {x:,.0f}")
+        df_display["campaign_cost"] = df_display["campaign_cost"].apply(lambda x: f"Rp {x:,.0f}")
+        df_display["net_revenue"] = df_display["net_revenue"].apply(lambda x: f"Rp {x:,.0f}")
+        df_display["roi"] = df_display["roi"].apply(lambda x: f"{int(round(x))}%")
+        df_display["avg_uplift"] = df_display["avg_uplift"].apply(lambda x: f"{x*100:.1f}%")
+        df_display["avg_arpu"] = df_display["avg_arpu"].apply(lambda x: f"Rp {x:,.0f}")
+        st.dataframe(df_display, use_container_width=True)
+
+        best_row = df.loc[df["roi"].idxmax()]
+        best_pct = int(best_row["target_percentage"])
+        n_customers = f"**{int(best_row['targeted_customers']):,}**"
+        roi = f"**{int(round(best_row['roi']))}%**"
+        revenue = f"**Rp {best_row['expected_revenue']:,.0f}**"
+        net_revenue = f"**Rp {best_row['net_revenue']:,.0f}**"
+        expected_conversions = f"**{int(round(best_row['expected_conversions'])):,}**"
+        avg_uplift = f"**{best_row['avg_uplift']*100:.1f}%**"
+        insight = (
+            f"Based on the campaign simulation results, the most optimal strategy is to target the top **{best_pct}%** of customers ({n_customers} customers). "
+            f"With this approach, the expected ROI is {roi}, expected conversions are {expected_conversions}, average uplift is {avg_uplift}, generating an estimated revenue of {revenue} and a net profit of {net_revenue}. "
+            "This strategy offers the best balance between the number of targeted customers, potential revenue, and campaign cost efficiency."
+        )
+        st.markdown(f"**💡 Insight:**\n\n{insight}")
+
+        # Graph 1: Net Revenue & ROI vs Target % (matplotlib)
+        fig1, ax1 = plt.subplots(figsize=(9, 6))
+        color = 'tab:blue'
+        ax1.set_xlabel('Target')
+        ax1.set_ylabel('Net Revenue (Rp)', color=color)
+        ax1.set_title("Net Revenue & ROI vs Target %")
+        line1 = ax1.plot(df['Target %'], df['net_revenue'], color=color, marker='o', label='Net Revenue')
+        ax1.tick_params(axis='y', labelcolor=color)
+        ax1.yaxis.set_major_formatter(mtick.StrMethodFormatter('{x:,.0f}'))
+        for i, v in enumerate(df['net_revenue']):
+            ax1.annotate(f"Rp {int(v):,}", (i, v), textcoords="offset points", xytext=(0,5), ha='center', fontsize=8, color=color)
+        ax2 = ax1.twinx()
+        color = 'tab:green'
+        ax2.set_ylabel('ROI (%)', color=color)
+        line2 = ax2.plot(df['Target %'], df['roi'], color=color, marker='x', label='ROI')
+        ax2.tick_params(axis='y', labelcolor=color)
+        for i, v in enumerate(df['roi']):
+            ax2.annotate(f"{int(round(v))}%", (i, v), textcoords="offset points", xytext=(0,5), ha='center', fontsize=8, color=color)
+        max_net_idx = df['net_revenue'].idxmax()
+        ax1.plot(max_net_idx, df['net_revenue'][max_net_idx], marker='o', color='red', markersize=10, label='Max Net Revenue')
+        ax1.annotate('Max Net Revenue', (max_net_idx, df['net_revenue'][max_net_idx]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='red')
+        max_idx = df['roi'].idxmax()
+        ax2.plot(max_idx, df['roi'][max_idx], marker='o', color='red', markersize=10, label='Max ROI')
+        ax2.annotate('Max ROI', (max_idx, df['roi'][max_idx]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='red')
+        fig1.tight_layout()
+        st.pyplot(fig1)
+
+        # Graph 2: Bar Chart - Expected Revenue, Cost, Net Revenue per Target % + ROI Line + Data Labels + Highlight
+        fig2, ax = plt.subplots(figsize=(9, 6))
+        ax.set_title("Expected Revenue, Cost, Net Revenue per Target %")
+        x = np.arange(len(df['Target %']))
+        width = 0.25
+        bars1 = ax.bar(x - width, df['expected_revenue'], width, label='Expected Revenue', color='#4e79a7')
+        bars2 = ax.bar(x, df['campaign_cost'], width, label='Cost', color='#f28e2b')
+        bars3 = ax.bar(x + width, df['net_revenue'], width, label='Net Revenue', color='#59a14f')
+        for bar in bars1: ax.annotate(f"{int(bar.get_height()):,}", (bar.get_x() + bar.get_width()/2, bar.get_height()), ha='center', va='bottom', fontsize=8)
+        for bar in bars2: ax.annotate(f"{int(bar.get_height()):,}", (bar.get_x() + bar.get_width()/2, bar.get_height()), ha='center', va='bottom', fontsize=8)
+        for bar in bars3: ax.annotate(f"{int(bar.get_height()):,}", (bar.get_x() + bar.get_width()/2, bar.get_height()), ha='center', va='bottom', fontsize=8)
+        ax2b = ax.twinx()
+        ax2b.plot(x, df['roi'], color='tab:red', marker='o', label='ROI (%)')
+        for i, v in enumerate(df['roi']):
+            ax2b.annotate(f"{int(round(v))}%", (x[i], v), textcoords="offset points", xytext=(0,5), ha='center', fontsize=8, color='tab:red')
+        max_net_idx = df['net_revenue'].idxmax()
+        ax.annotate('Max Net Revenue', (x[max_net_idx] + width, df['net_revenue'][max_net_idx]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='green')
+        max_roi_idx = df['roi'].idxmax()
+        ax2b.annotate('Max ROI', (x[max_roi_idx], df['roi'][max_roi_idx]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='red')
+        ax.set_xticks(x)
+        ax.set_xticklabels(df['Target %'])
+        ax.set_xlabel('Target')
+        ax.legend(loc='upper left')
+        ax2b.legend(loc='upper right')
+        ax.set_ylabel('Amount (Rp)')
+        ax.yaxis.set_major_formatter(mtick.StrMethodFormatter('{x:,.0f}'))
+        ax2b.set_ylabel('ROI (%)')
+        fig2.tight_layout()
+        st.pyplot(fig2)
+
+        # Graph 3: Line Chart - Average Uplift vs Target % + Data Labels + Mean Line + Highlight Drop
+        fig3, ax = plt.subplots(figsize=(9, 6))
+        ax.set_title("Average Uplift vs Target %")
+        ax.plot(df['Target %'], df['avg_uplift']*100, marker='o', color='#1f77b4', label='Avg Uplift')
+        for i, v in enumerate(df['avg_uplift']*100):
+            ax.annotate(f"{v:.1f}%", (i, v), textcoords="offset points", xytext=(0,5), ha='center', fontsize=8, color='#1f77b4')
         mean_uplift = (df['avg_uplift']*100).mean()
-        fig3.add_hline(y=mean_uplift, line_dash="dash", annotation_text=f"Mean: {mean_uplift:.1f}%")
-        fig3.update_layout(
-            title="Average Uplift vs Target %",
-            xaxis_title="Target %",
-            yaxis_title="Average Uplift (%)"
-        )
-        st.plotly_chart(fig3, use_container_width=True)
-
-        # Bar Chart for Revenue/Cost/Net Revenue
-        fig2 = go.Figure()
-        
-        fig2.add_trace(go.Bar(
-            x=df['Target %'],
-            y=df['expected_revenue'],
-            name='Expected Revenue',
-            text=[f"{int(v):,}" for v in df['expected_revenue']],
-            textposition='auto'
-        ))
-        
-        fig2.add_trace(go.Bar(
-            x=df['Target %'],
-            y=df['campaign_cost'],
-            name='Cost',
-            text=[f"{int(v):,}" for v in df['campaign_cost']],
-            textposition='auto'
-        ))
-        
-        fig2.add_trace(go.Bar(
-            x=df['Target %'],
-            y=df['net_revenue'],
-            name='Net Revenue',
-            text=[f"{int(v):,}" for v in df['net_revenue']],
-            textposition='auto'
-        ))
-        
-        fig2.update_layout(
-            title="Expected Revenue, Cost, Net Revenue per Target %",
-            xaxis_title="Target %",
-            yaxis_title="Amount (Rp)",
-            barmode='group'
-        )
-        
-        st.plotly_chart(fig2, use_container_width=True)
-
-        # What-If Analysis
-        st.markdown("---")
-        st.header("📊 What-If Analysis")
-        
-        col1, col2 = st.columns([1, 2])
-        
-        with col1:
-            target_pct = st.slider("Target % Customer", 1, 100, 5)
-            cost_per_customer = st.number_input("Biaya per Customer", value=5000)
-            revenue_multiplier = st.number_input("Revenue Multiplier", value=1.2, step=0.1)
-            
-            if st.button("Run Prediction"):
-                result = run_what_if(target_pct, cost_per_customer, revenue_multiplier)
-                
-                with col2:
-                    st.subheader("Hasil Analisis")
-                    st.write(f"👥 Targeted customers: {result['targeted_customers']:,}")
-                    st.write(f"🤝 Expected conversions: {result['expected_conversions']:,.0f}")
-                    st.write(f"📈 Expected revenue: Rp {result['expected_revenue']:,.0f}")
-                    st.write(f"💸 Campaign cost: Rp {result['campaign_cost']:,.0f}")
-                    st.write(f"📊 Net profit: Rp {result['net_revenue']:,.0f}")
-                    st.write(f"💰 ROI: {result['roi']:,.1f}%")
-                    st.write(f"🚀 Avg uplift per customer: {result['avg_uplift']*100:.1f}%")
-                    st.write(f"📱 Avg ARPU: Rp {result['avg_arpu']:,.0f}")
-
-
+        ax.axhline(mean_uplift, color='gray', linestyle='--', label=f'Mean: {mean_uplift:.1f}%')
+        uplift_vals = df['avg_uplift']*100
+        diffs = np.diff(uplift_vals)
+        if len(diffs) > 0:
+            drop_idx = np.argmin(diffs)
+            ax.plot(drop_idx+1, uplift_vals.iloc[drop_idx+1], marker='o', color='red', markersize=10)
+            ax.annotate('Significant Drop', (drop_idx+1, uplift_vals.iloc[drop_idx+1]), textcoords="offset points", xytext=(0,15), ha='center', fontsize=9, color='red')
+        ax.set_xlabel('Target %')
+        ax.set_ylabel('Average Uplift (%)')
+        ax.legend()
+        fig3.tight_layout()
+        st.pyplot(fig3)
     # --- Section 3: Network Influence Analysis ---
     st.header("🌐 Network & Influence Insights")
     num_nodes = G.number_of_nodes()
     num_edges = G.number_of_edges()
     density = nx.density(G)
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Total Nodes", f"{num_nodes:,}")
-    with col2:
-        st.metric("Total Connections", f"{num_edges:,}")
-    with col3:
-        st.metric("Network Density", f"{density:.4f}")
+    network_insight = (
+        f"- Total number of nodes in the network: **{num_nodes:,}**\n"
+        f"- Total number of connections (edges) between nodes: **{num_edges:,}**\n"
+        f"- Network density (proportion of actual to possible connections): **{density:.4f}**\n"
+    )
+    st.markdown(network_insight)
     st.markdown("---")
     st.header("🏆 Top 10 Influential Customers")
-    cols_inf = [
+    top_influencers = df_influence.sort_values('influence_score', ascending=False).head(10).copy()
+    cols = [
         'customer_id', 'influence_score', 'network_influence', 'degree_centrality', 'betweenness_centrality',
         'eigenvector_centrality', 'pagerank', 'uplift_score', 'ARPU', 'connections', 'city', 'plan_type', 'age'
     ]
-    top_influencers = df_influence.sort_values('influence_score', ascending=False).head(10).copy()
-    top_influencers = top_influencers[cols_inf]
+    top_influencers = top_influencers[cols]
     top_influencers['influence_score'] = top_influencers['influence_score'].apply(lambda x: f"{x:.4f}")
     top_influencers['network_influence'] = top_influencers['network_influence'].apply(lambda x: f"{x:.4f}")
     top_influencers['degree_centrality'] = top_influencers['degree_centrality'].apply(lambda x: f"{x:.4f}")
@@ -281,6 +306,7 @@ def main():
     top_influencers['pagerank'] = top_influencers['pagerank'].apply(lambda x: f"{x:.4f}")
     top_influencers['uplift_score'] = top_influencers['uplift_score'].apply(lambda x: f"{x*100:.2f}%")
     top_influencers['ARPU'] = top_influencers['ARPU'].apply(lambda x: f"Rp {x:,.0f}")
+    top_influencers.insert(0, 'No', range(1, len(top_influencers) + 1))
     st.dataframe(top_influencers, use_container_width=True)
     top_row = top_influencers.iloc[0]
     insight_influencer = (
@@ -289,7 +315,6 @@ def main():
         f"Prioritizing campaigns to these top influencers can accelerate message reach and **boost revenue**."
     )
     st.markdown(insight_influencer)
-
 
     # --- Section 4: Customer Segmentation ---
     st.header("📱 Plan Type Performance")
@@ -342,16 +367,6 @@ def main():
     top10_table.columns = ['Feature', 'SHAP Importance']
     st.dataframe(top10_table, use_container_width=True)
     st.markdown("💡 **Insight**: These features have the highest impact on conversion predictions according to SHAP analysis.")
-    fig = px.bar(
-        top10.head(10), 
-        x='shap_importance', 
-        y='fitur',
-        orientation='h',
-        title='Top 10 SHAP Feature Importance',
-        labels={'shap_importance': 'SHAP Importance', 'fitur': 'Feature'}
-    )
-    fig.update_layout(yaxis={'categoryorder':'total ascending'})
-    st.plotly_chart(fig, use_container_width=True)
 
 if __name__ == "__main__":
     main()
